@@ -9,6 +9,7 @@ let draw = new Drawable()
 let timer = new UITimer(Interval = 0.01)
 let xTextBox = new TextBox()
 let yTextBox = new TextBox()
+let speedSlider = new Slider(Orientation = Orientation.Vertical, MinValue = 0, MaxValue = 100, TickFrequency = 1)
 
 let mutable pos = 0.0, 0.0
 let maxPathLenght = 4096
@@ -19,6 +20,7 @@ let font = new Font(SystemFont.Default)
 let mutable globBounds = RectangleF()
 let mutable poliX' = defaultPoly
 let mutable poliY' = defaultPoly
+let mutable speed = 1.0
 
 let calcDeriv point =
     calculate point poliX', calculate point poliY'
@@ -37,7 +39,7 @@ let isOnScreen p =
     abs screenPos.X < defaultMagni * 10.0f && abs screenPos.Y < defaultMagni * 10.0f
 
 let updatePos() =
-    let mul = 3.0 * timer.Interval
+    let mul = speed * timer.Interval
     let delta = calcDeriv pos
     pos <- (fst pos + fst delta * mul, snd pos + snd delta * mul)
     if not (isOnScreen pos) then clearPosPath()
@@ -97,8 +99,6 @@ let paint (graphics : Graphics) =
     globBounds <- graphics.ClipBounds
 
     drawCoordSys graphics
-    //drawLine (1.0, -3.0) graphics
-    //drawLine (1.0, 2.0) graphics
     drawPos pos graphics
     drawPath graphics
 
@@ -107,9 +107,13 @@ let mouseClick (coord : PointF) =
     pos <- screenCoordToPos coord globBounds
     updatePath()
 
+let sliderChanged value =
+    speed <- value * 0.1
+
 xTextBox.TextChanged.Add (fun _ ->
     try
         poliX' <- parse xTextBox.Text
+        clearPosPath()
         xTextBox.BackgroundColor <- Colors.White
     with
     | _ -> xTextBox.BackgroundColor <- Colors.OrangeRed
@@ -118,6 +122,7 @@ xTextBox.TextChanged.Add (fun _ ->
 yTextBox.TextChanged.Add(fun _ ->
     try
         poliY' <- parse yTextBox.Text
+        clearPosPath()
         yTextBox.BackgroundColor <- Colors.White
     with
     | _ -> yTextBox.BackgroundColor <- Colors.OrangeRed
@@ -145,7 +150,9 @@ menu.Items.Add(viewMenu |> makeMenu)
 
 let layout =
     Tbl [
-        StretchedRow [StretchedEl (draw)];
+        StretchedRow [TableEl (Tbl [
+                                    StretchedRow [StretchedEl (draw); El(speedSlider)]
+        ])]
         Row [TableEl (Tbl [
                         Pad (Padding(4))
                         Spacing (Size(0, 2))
@@ -155,11 +162,13 @@ let layout =
         ] |> makeLayout
 
 draw.Paint.Add (fun args -> paint args.Graphics)
-draw.MouseDown.Add (fun args -> mouseClick args.Location)
+draw.MouseDown.Add (fun args -> mouseClick args.Location ; draw.Focus())
 draw.MouseWheel.Add (fun args -> changeMagni (args.Delta.Height / 3.0f + 1.0f))
 
 timer.Elapsed.Add(fun _ -> updatePos() ; updatePath() ; draw.Invalidate())
 timer.Start()
+
+speedSlider.ValueChanged.Add(fun _ -> sliderChanged (float speedSlider.Value))
 
 form.Content <- layout
 form.Menu <- menu
