@@ -3,24 +3,12 @@ open Eto.Drawing
 open EtoUtils
 open EqParser
 
-type DiffEq = {
-    x' : (float * float) -> float;
-    y' : (float * float) -> float
-}
-let testEq = {
-    x' = fun (x, y) -> x - x*x*x - x * y*y - y;
-    y' = fun (x, y) -> y - y * x*x - y*y*y + x;
-}
-let testEq2 = {
-    x' = fun (x, y) -> x + 2.0 * y;
-    y' = fun (x, y) -> -2.0 * x + y;
-}
-
 let app = new Application()
-let form = new Form(Title = "Diffegyenletek", Size = Size(800, 800))
+let form = new Form(Title = "Differential equation visualizer", Size = Size(800, 800))
 let draw = new Drawable()
 let timer = new UITimer(Interval = 0.01)
 let xTextBox = new TextBox()
+let yTextBox = new TextBox()
 
 let mutable pos = 0.0, 0.0
 let maxPathLenght = 4096
@@ -28,6 +16,15 @@ let path = System.Collections.Generic.Queue()
 let defaultMagni = 200.0f
 let mutable magni = defaultMagni
 let font = new Font(SystemFont.Default)
+let mutable globBounds = RectangleF()
+let mutable poliX' = defaultPoly
+let mutable poliY' = defaultPoly
+
+let calcDeriv point =
+    calculate point poliX', calculate point poliY'
+
+let clearPosPath() =
+    path.Clear() ; pos <- 0.0, 0.0
 
 let posToScreenCoord (pos : float * float) (bounds : RectangleF) =
     PointF (magni * float32 (fst pos) + bounds.MiddleX, -magni * float32 (snd pos) + bounds.MiddleY)
@@ -35,10 +32,15 @@ let posToScreenCoord (pos : float * float) (bounds : RectangleF) =
 let screenCoordToPos (coord : PointF) (bounds : RectangleF) =
     ((coord.X - bounds.MiddleX) / magni |> float, (coord.Y - bounds.MiddleY) / -magni |> float)
 
+let isOnScreen p =
+    let screenPos = posToScreenCoord p globBounds
+    abs screenPos.X < defaultMagni * 10.0f && abs screenPos.Y < defaultMagni * 10.0f
+
 let updatePos() =
-    let mul = 0.5 * timer.Interval
-    let delta = (testEq.x' pos, testEq.y' pos)
+    let mul = 3.0 * timer.Interval
+    let delta = calcDeriv pos
     pos <- (fst pos + fst delta * mul, snd pos + snd delta * mul)
+    if not (isOnScreen pos) then clearPosPath()
 
 let updatePath() =
     path.Enqueue pos
@@ -84,27 +86,41 @@ let drawPos pos (graphics : Graphics) =
     let screenCoord = posToScreenCoord pos graphics.ClipBounds
     graphics.DrawEllipse(circleColor, screenCoord.X - circleRad, screenCoord.Y - circleRad, circleRad * 2.0f, circleRad * 2.0f)
 
-let mutable globBounds = RectangleF()
+let drawLine (dirX, dirY) (graphics : Graphics) =
+    let mul = 1000.0
+    let b = posToScreenCoord (dirX * mul, dirY * mul) graphics.ClipBounds
+    let e = posToScreenCoord (dirX * -mul, dirY * -mul) graphics.ClipBounds
+    graphics.DrawLine(Colors.LightBlue, b, e)
 
 let paint (graphics : Graphics) =
     graphics.AntiAlias <- false
     globBounds <- graphics.ClipBounds
 
     drawCoordSys graphics
+    //drawLine (1.0, -3.0) graphics
+    //drawLine (1.0, 2.0) graphics
     drawPos pos graphics
     drawPath graphics
 
 let mouseClick (coord : PointF) =
-    path.Clear()
+    clearPosPath()
     pos <- screenCoordToPos coord globBounds
     updatePath()
 
 xTextBox.TextChanged.Add (fun _ ->
     try
-        parse xTextBox.Text |> ignore
+        poliX' <- parse xTextBox.Text
         xTextBox.BackgroundColor <- Colors.White
     with
-    | _ -> System.Console.WriteLine "gebasz" ; xTextBox.BackgroundColor <- Colors.OrangeRed
+    | _ -> xTextBox.BackgroundColor <- Colors.OrangeRed
+)
+
+yTextBox.TextChanged.Add(fun _ ->
+    try
+        poliY' <- parse yTextBox.Text
+        yTextBox.BackgroundColor <- Colors.White
+    with
+    | _ -> yTextBox.BackgroundColor <- Colors.OrangeRed
 )
 
 let menu = new MenuBar()
@@ -134,7 +150,7 @@ let layout =
                         Pad (Padding(4))
                         Spacing (Size(0, 2))
                         Row [El (new Label(Text = "x'=")) ; StretchedEl(xTextBox)]
-                        Row [El (new Label(Text = "y'=")) ; StretchedEl(new TextBox())]
+                        Row [El (new Label(Text = "y'=")) ; StretchedEl(yTextBox)]
                         ])]
         ] |> makeLayout
 
