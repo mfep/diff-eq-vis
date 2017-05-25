@@ -65,8 +65,8 @@
     <Reference Include="Eto">
       <HintPath>..\packages\Eto.Forms.2.3.0\lib\net45\Eto.dll</HintPath>
     </Reference>
-    <Reference Include="Eto.WinForms">
-      <HintPath>..\packages\Eto.Platform.Windows.2.3.0\lib\net45\Eto.WinForms.dll</HintPath>
+    <Reference Include="Eto.Wpf">
+      <HintPath>..\packages\Eto.Platform.Wpf.2.3.0\lib\net45\Eto.Wpf.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core">
@@ -74,13 +74,13 @@
       <AssemblyName>FSharp.Core.dll</AssemblyName>
       <HintPath>$(MSBuildProgramFiles32)\Reference Assemblies\Microsoft\FSharp\.NETFramework\v4.0\$(TargetFSharpCoreVersion)\FSharp.Core.dll</HintPath>
     </Reference>
+    <Reference Include="PresentationFramework" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.ValueTuple">
       <HintPath>..\packages\System.ValueTuple.4.3.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
     </Reference>
-    <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -7,8 +7,9 @@ let app = new Application()
 let form = new Form(Title = "Differential equation visualizer", Size = Size(800, 800))
 let draw = new Drawable(ToolTip = "Click to set initial condition")
 let timer = new UITimer(Interval = 0.01)
-let xTextBox = new TextBox(Text = defaultX')
-let yTextBox = new TextBox(Text = defaultY')
+let font = new Font(FontFamilies.Monospace, 12.0f)
+let xTextBox = new TextBox(Text = defaultX', Font = font)
+let yTextBox = new TextBox(Text = defaultY', Font = font)
 let speedSlider = new Slider(Orientation = Orientation.Vertical, MinValue = 0, MaxValue = 100, TickFrequency = 1, Value = 10, ToolTip = "Adjust speed of simulation")
 
 let mutable pos = 1.0, 1.0
@@ -16,7 +17,6 @@ let maxPathLenght = 4096
 let path = System.Collections.Generic.Queue()
 let defaultMagni = 200.0f
 let mutable magni = defaultMagni
-let font = new Font(SystemFont.Default)
 let mutable globBounds = RectangleF()
 let mutable poliX' = parse defaultX'
 let mutable poliY' = parse defaultY'
@@ -173,7 +173,7 @@ speedSlider.ValueChanged.Add(fun _ -> sliderChanged (float speedSlider.Value))
 form.Content <- layout
 form.Menu <- menu
 
-[<EntryPoint>]
+[<EntryPoint; System.STAThread>]
 let main argv =
     app.Run(form)
     0
