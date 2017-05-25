@@ -5,21 +5,21 @@ open EqParser
 
 let app = new Application()
 let form = new Form(Title = "Differential equation visualizer", Size = Size(800, 800))
-let draw = new Drawable()
+let draw = new Drawable(ToolTip = "Click to set initial condition")
 let timer = new UITimer(Interval = 0.01)
-let xTextBox = new TextBox()
-let yTextBox = new TextBox()
-let speedSlider = new Slider(Orientation = Orientation.Vertical, MinValue = 0, MaxValue = 100, TickFrequency = 1)
+let xTextBox = new TextBox(Text = defaultX')
+let yTextBox = new TextBox(Text = defaultY')
+let speedSlider = new Slider(Orientation = Orientation.Vertical, MinValue = 0, MaxValue = 100, TickFrequency = 1, Value = 10, ToolTip = "Adjust speed of simulation")
 
-let mutable pos = 0.0, 0.0
+let mutable pos = 1.0, 1.0
 let maxPathLenght = 4096
 let path = System.Collections.Generic.Queue()
 let defaultMagni = 200.0f
 let mutable magni = defaultMagni
 let font = new Font(SystemFont.Default)
 let mutable globBounds = RectangleF()
-let mutable poliX' = defaultPoly
-let mutable poliY' = defaultPoly
+let mutable poliX' = parse defaultX'
+let mutable poliY' = parse defaultY'
 let mutable speed = 1.0
 
 let calcDeriv point =

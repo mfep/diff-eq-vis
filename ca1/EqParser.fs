@@ -11,7 +11,7 @@ type private Token =
 | STAR
 
 let private regex s = new Text.RegularExpressions.Regex(s)
-let private tokenR = regex @"^((?<token>(\d+\.?\d*|\w|\^|\+|-))\s*)+$"
+let private tokenR = regex @"^((?<token>(\d+\.?\d*|\w|\^|\+|-|\*))\s*)+$"
 let private tokenize (s : string) =
     if not (tokenR.IsMatch(s)) then failwith "Invalid input string" else
         [ for x in tokenR.Match(s).Groups.["token"].Captures do
@@ -27,9 +27,11 @@ let private tokenize (s : string) =
         ]
 
 let private preprocessTokens tokens =
-    match List.head tokens with
-    | PLUS | MINUS -> tokens
-    | _ -> PLUS :: tokens
+    let tokens =
+        match List.head tokens with
+        | PLUS | MINUS -> tokens
+        | _ -> PLUS :: tokens
+    tokens |> List.filter (fun t -> t <> STAR)
 
 type private Term = float * (char * float) list
 type Polinomial = Term list
@@ -103,5 +105,5 @@ let parse str =
 let calculate point polinomial =
     calcPolinomial 0.0 point polinomial
 
-let defaultPoly =
-    parse "0"
+let defaultX' = "xy^2-x^3"
+let defaultY' = "-y^3-2x^2y"
