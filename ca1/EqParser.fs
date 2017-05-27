@@ -34,7 +34,7 @@ let private preprocessTokens tokens =
     tokens |> List.filter (fun t -> t <> STAR)
 
 type private Term = float * (char * float) list
-type Polinomial = Term list
+type Polynomial = Term list
 type private TokenStream = Token list
 
 let private tryToken (src : TokenStream) =
@@ -80,9 +80,9 @@ let private parseTerm src : (Term * Token list) option =
         | _ -> failwith "unexpected end of term"
     | None -> None
 
-let rec private parsePolinomial poly src : Polinomial =
+let rec private parsePolynom poly src : Polynomial =
     match parseTerm src with
-    | Some (term, src) -> parsePolinomial (term :: poly) src
+    | Some (term, src) -> parsePolynom (term :: poly) src
     | None -> List.rev poly
 
 let private calcTerm (x, y) (coeff, vars)  =
@@ -94,16 +94,16 @@ let private calcTerm (x, y) (coeff, vars)  =
         | _ -> failwith "unexpected id"
     coeff * loop 1.0 vars
 
-let rec private calcPolinomial sum point (poly : Polinomial) =
+let rec private calcPolynomial sum point (poly : Polynomial) =
     match poly with
-    | term :: tl -> calcPolinomial (sum + calcTerm point term) point tl
+    | term :: tl -> calcPolynomial (sum + calcTerm point term) point tl
     | [] -> sum
 
 let parse str =
-    str |> tokenize |> preprocessTokens |> parsePolinomial []
+    str |> tokenize |> preprocessTokens |> parsePolynom []
 
-let calculate point polinomial =
-    calcPolinomial 0.0 point polinomial
+let calculate point polynomial =
+    calcPolynomial 0.0 point polynomial
 
 let defaultX' = "xy^2-x^3"
 let defaultY' = "-y^3-2x^2y"

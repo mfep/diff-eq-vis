@@ -18,12 +18,12 @@ let path = System.Collections.Generic.Queue()
 let defaultMagni = 200.0f
 let mutable magni = defaultMagni
 let mutable globBounds = RectangleF()
-let mutable poliX' = parse defaultX'
-let mutable poliY' = parse defaultY'
+let mutable polyX' = parse defaultX'
+let mutable polyY' = parse defaultY'
 let mutable speed = 1.0
 
 let calcDeriv point =
-    calculate point poliX', calculate point poliY'
+    calculate point polyX', calculate point polyY'
 
 let clearPosPath() =
     path.Clear() ; pos <- 0.0, 0.0
@@ -112,7 +112,7 @@ let sliderChanged value =
 
 xTextBox.TextChanged.Add (fun _ ->
     try
-        poliX' <- parse xTextBox.Text
+        polyX' <- parse xTextBox.Text
         clearPosPath()
         xTextBox.BackgroundColor <- Colors.White
     with
@@ -121,7 +121,7 @@ xTextBox.TextChanged.Add (fun _ ->
 
 yTextBox.TextChanged.Add(fun _ ->
     try
-        poliY' <- parse yTextBox.Text
+        polyY' <- parse yTextBox.Text
         clearPosPath()
         yTextBox.BackgroundColor <- Colors.White
     with
