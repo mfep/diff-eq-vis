@@ -2,6 +2,7 @@
 open Eto.Drawing
 open EtoUtils
 open EqParser
+open DeSolver
 
 let app = new Application()
 let form = new Form(Title = "Differential equation visualizer", Size = Size(800, 800))
@@ -10,10 +11,10 @@ let timer = new UITimer(Interval = 0.01)
 let font = new Font(FontFamilies.Monospace, 12.0f)
 let xTextBox = new TextBox(Text = defaultX', Font = font)
 let yTextBox = new TextBox(Text = defaultY', Font = font)
-let speedSlider = new Slider(Orientation = Orientation.Vertical, MinValue = 0, MaxValue = 100, TickFrequency = 1, Value = 10, ToolTip = "Adjust speed of simulation")
+let speedSlider = new Slider(Orientation = Orientation.Vertical, MinValue = 1, MaxValue = 50, TickFrequency = 1, Value = 10, ToolTip = "Adjust number of iterations per visual step", SnapToTick = true)
 
 let mutable pos = 1.0, 1.0
-let maxPathLenght = 4096
+let maxPathLenght = 1024
 let path = System.Collections.Generic.Queue()
 let defaultMagni = 200.0f
 let mutable magni = defaultMagni
@@ -38,10 +39,15 @@ let isOnScreen p =
     let screenPos = posToScreenCoord p globBounds
     abs screenPos.X < defaultMagni * 10.0f && abs screenPos.Y < defaultMagni * 10.0f
 
+let iterSolver point =
+    let iterationCount = speedSlider.Value
+    let rec loop p i =
+        if i = iterationCount then p
+        else loop (rk4step calcDeriv p) (i+1)
+    loop point 1
+
 let updatePos() =
-    let mul = speed * timer.Interval
-    let delta = calcDeriv pos
-    pos <- (fst pos + fst delta * mul, snd pos + snd delta * mul)
+    pos <- iterSolver pos
     if not (isOnScreen pos) then clearPosPath()
 
 let updatePath() =
@@ -95,7 +101,6 @@ let drawLine (dirX, dirY) (graphics : Graphics) =
     graphics.DrawLine(Colors.LightBlue, b, e)
 
 let paint (graphics : Graphics) =
-    graphics.AntiAlias <- false
     globBounds <- graphics.ClipBounds
 
     drawCoordSys graphics
@@ -156,8 +161,8 @@ let layout =
         Row [TableEl (Tbl [
                         Pad (Padding(4))
                         Spacing (Size(0, 2))
-                        Row [El (new Label(Text = "x'=")) ; StretchedEl(xTextBox)]
-                        Row [El (new Label(Text = "y'=")) ; StretchedEl(yTextBox)]
+                        Row [El (new Label(Text = "x'=", Font = font)) ; StretchedEl(xTextBox)]
+                        Row [El (new Label(Text = "y'=", Font = font)) ; StretchedEl(yTextBox)]
                         ])]
         ] |> makeLayout
 
