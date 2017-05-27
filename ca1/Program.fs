@@ -11,7 +11,12 @@ let timer = new UITimer(Interval = 0.01)
 let font = new Font(FontFamilies.Monospace, 12.0f)
 let xTextBox = new TextBox(Text = defaultX', Font = font)
 let yTextBox = new TextBox(Text = defaultY', Font = font)
-let speedSlider = new Slider(Orientation = Orientation.Vertical, MinValue = 1, MaxValue = 50, TickFrequency = 1, Value = 10, ToolTip = "Adjust number of iterations per visual step", SnapToTick = true)
+let iterSlider = new Slider(Orientation = Orientation.Horizontal, MinValue = 1, MaxValue = 50, Value = 10, ToolTip = "Number of iterations per visual step", SnapToTick = true)
+let iterTextBox = new TextBox(ReadOnly = true, Text = sprintf "%d" iterSlider.Value, Width = 80)
+let stepSlider = new Slider(Orientation = Orientation.Horizontal, MinValue = 1, MaxValue = 100, Value = 1)
+let step() =
+    float stepSlider.Value * 0.0005
+let stepTextBox = new TextBox(ReadOnly = true, Width = 30, Text = sprintf "%f" (step()))
 
 let mutable pos = 1.0, 1.0
 let maxPathLenght = 1024
@@ -21,7 +26,6 @@ let mutable magni = defaultMagni
 let mutable globBounds = RectangleF()
 let mutable polyX' = parse defaultX'
 let mutable polyY' = parse defaultY'
-let mutable speed = 1.0
 
 let calcDeriv point =
     calculate point polyX', calculate point polyY'
@@ -40,10 +44,10 @@ let isOnScreen p =
     abs screenPos.X < defaultMagni * 10.0f && abs screenPos.Y < defaultMagni * 10.0f
 
 let iterSolver point =
-    let iterationCount = speedSlider.Value
+    let iterationCount = iterSlider.Value
     let rec loop p i =
-        if i = iterationCount then p
-        else loop (rk4step calcDeriv p) (i+1)
+        if i > iterationCount then p
+        else loop (rk4step (step()) calcDeriv p) (i+1)
     loop point 1
 
 let updatePos() =
@@ -112,9 +116,6 @@ let mouseClick (coord : PointF) =
     pos <- screenCoordToPos coord globBounds
     updatePath()
 
-let sliderChanged value =
-    speed <- value * 0.1
-
 xTextBox.TextChanged.Add (fun _ ->
     try
         polyX' <- parse xTextBox.Text
@@ -155,14 +156,14 @@ menu.Items.Add(viewMenu |> makeMenu)
 
 let layout =
     Tbl [
-        StretchedRow [TableEl (Tbl [
-                                    StretchedRow [StretchedEl (draw); El(speedSlider)]
-        ])]
+        StretchedRow [StretchedEl (draw)]
         Row [TableEl (Tbl [
                         Pad (Padding(4))
-                        Spacing (Size(0, 2))
-                        Row [El (new Label(Text = "x'=", Font = font)) ; StretchedEl(xTextBox)]
-                        Row [El (new Label(Text = "y'=", Font = font)) ; StretchedEl(yTextBox)]
+                        Spacing (Size(8, 2))
+                        Row [El(null) ; El (new Label(Text = "x'=", Font = font, VerticalAlignment = VerticalAlignment.Center, TextAlignment = TextAlignment.Right)) ; StretchedEl(xTextBox)]
+                        Row [El(null) ;El (new Label(Text = "y'=", Font = font, VerticalAlignment = VerticalAlignment.Center, TextAlignment = TextAlignment.Right)) ; StretchedEl(yTextBox)]
+                        Row [El (new Label(Text = "Visual step:", VerticalAlignment = VerticalAlignment.Center)) ; El (iterTextBox) ; StretchedEl(iterSlider)]
+                        Row [El (new Label(Text = "Solver step:", VerticalAlignment = VerticalAlignment.Center)) ; El (stepTextBox) ; StretchedEl(stepSlider)]
                         ])]
         ] |> makeLayout
 
@@ -173,7 +174,8 @@ draw.MouseWheel.Add (fun args -> changeMagni (args.Delta.Height / 3.0f + 1.0f))
 timer.Elapsed.Add(fun _ -> updatePos() ; updatePath() ; draw.Invalidate())
 timer.Start()
 
-speedSlider.ValueChanged.Add(fun _ -> sliderChanged (float speedSlider.Value))
+iterSlider.ValueChanged.Add (fun _ -> iterTextBox.Text <- sprintf "%d" iterSlider.Value)
+stepSlider.ValueChanged.Add (fun _ -> stepTextBox.Text <- sprintf "%f" (step ()))
 
 form.Content <- layout
 form.Menu <- menu
