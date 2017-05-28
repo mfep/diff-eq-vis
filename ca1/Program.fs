@@ -20,7 +20,7 @@ let stepTextBox = new TextBox(ReadOnly = true, Width = 30, Text = sprintf "%f" (
 let antialiasCheck = new CheckMenuItem(Text = "Antialiasing")
 
 let mutable pos = 1.0, 1.0
-let maxPathLenght = 1024
+let mutable maxPathLenght = 1024
 let path = System.Collections.Generic.Queue()
 let defaultMagni = 200.0f
 let mutable magni = defaultMagni
@@ -143,12 +143,20 @@ let changeMagni mul =
     magni <- magni * mul
     magni <- min maxMagni (max minMagni magni)
 
+let changeMaxPathCallback (str : string) =
+    try
+        let x = System.UInt16.Parse(str)
+        maxPathLenght <- x |> int
+        true
+    with | _ -> MessageBox.Show("Input should be a non-negative integer", MessageBoxType.Error) |> ignore ; false
+
 let viewMenu = SubMenu("View", [
                         ActionMenuItem("Zoom In").WithAction(fun _ -> changeMagni 1.3333f)
                         ActionMenuItem("Zoom Out").WithAction(fun _ -> changeMagni 0.75f)
                         ActionMenuItem("Default Zoom").WithAction(fun _ -> magni <- defaultMagni)
                         Separator
                         Item antialiasCheck
+                        ActionMenuItem("Set path length").WithAction(fun _ -> inputDialog "Set path length" "Set path length" (maxPathLenght.ToString()) changeMaxPathCallback)
                       ])
 menu.Items.Add(viewMenu |> makeMenu)
 

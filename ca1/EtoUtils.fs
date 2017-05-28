@@ -70,3 +70,18 @@ let rec makeMenu menu =
         | _ -> ()
         ret
     | Separator -> new SeparatorMenuItem() :> _
+
+let inputDialog title text initText callback =
+    use dialog = new Dialog(Title = title)
+    let okButton = new Button(Text = "Ok")
+    let textBox = new TextBox(Text = initText)
+    let layout = Tbl [
+                        Pad(Padding(20))
+                        Spacing(Size(6, 6))
+                        StretchedRow [StretchedEl(new Label(Text = text))]
+                        Row [StretchedEl(textBox)]
+                        Row [StretchedEl(okButton)]
+                    ] |> makeLayout
+    okButton.Click.Add (fun _ -> if callback (textBox.Text) then dialog.Close())
+    dialog.Content <- layout
+    dialog.ShowModal()
