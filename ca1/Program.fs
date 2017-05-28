@@ -17,6 +17,7 @@ let stepSlider = new Slider(Orientation = Orientation.Horizontal, MinValue = 1, 
 let step() =
     float stepSlider.Value * 0.0005
 let stepTextBox = new TextBox(ReadOnly = true, Width = 30, Text = sprintf "%f" (step()))
+let antialiasCheck = new CheckMenuItem(Text = "Antialiasing")
 
 let mutable pos = 1.0, 1.0
 let maxPathLenght = 1024
@@ -98,13 +99,8 @@ let drawPos pos (graphics : Graphics) =
     let screenCoord = posToScreenCoord pos graphics.ClipBounds
     graphics.DrawEllipse(circleColor, screenCoord.X - circleRad, screenCoord.Y - circleRad, circleRad * 2.0f, circleRad * 2.0f)
 
-let drawLine (dirX, dirY) (graphics : Graphics) =
-    let mul = 1000.0
-    let b = posToScreenCoord (dirX * mul, dirY * mul) graphics.ClipBounds
-    let e = posToScreenCoord (dirX * -mul, dirY * -mul) graphics.ClipBounds
-    graphics.DrawLine(Colors.LightBlue, b, e)
-
 let paint (graphics : Graphics) =
+    graphics.AntiAlias <- antialiasCheck.Checked
     globBounds <- graphics.ClipBounds
 
     drawCoordSys graphics
@@ -148,9 +144,11 @@ let changeMagni mul =
     magni <- min maxMagni (max minMagni magni)
 
 let viewMenu = SubMenu("View", [
-                        ActionMenuItem("Zoom In").WithAction(fun _ -> changeMagni 1.3333f);
-                        ActionMenuItem("Zoom Out").WithAction(fun _ -> changeMagni 0.75f);
+                        ActionMenuItem("Zoom In").WithAction(fun _ -> changeMagni 1.3333f)
+                        ActionMenuItem("Zoom Out").WithAction(fun _ -> changeMagni 0.75f)
                         ActionMenuItem("Default Zoom").WithAction(fun _ -> magni <- defaultMagni)
+                        Separator
+                        Item antialiasCheck
                       ])
 menu.Items.Add(viewMenu |> makeMenu)
 

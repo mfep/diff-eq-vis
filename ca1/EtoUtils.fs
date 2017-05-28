@@ -41,6 +41,7 @@ type Menu =
     | SubMenu of string * Menu list
     | Action of Menu * (MenuItem -> unit)
     | Check of Menu * bool
+    | Separator
     member m.WithAction cb = Action(m, cb)
     member m.WithCheck() = Check(m, true)
 
@@ -68,3 +69,4 @@ let rec makeMenu menu =
         | :? CheckMenuItem as c -> c.Checked <- def
         | _ -> ()
         ret
+    | Separator -> new SeparatorMenuItem() :> _
