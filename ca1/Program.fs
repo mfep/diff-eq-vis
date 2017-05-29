@@ -27,7 +27,7 @@ let mutable magni = defaultMagni
 let mutable globBounds = RectangleF()
 let mutable polyX' = parse defaultX'
 let mutable polyY' = parse defaultY'
-let mutable solver : stepfun = rk4step
+let mutable solver : stepfun = rk4Step
 
 let calcDeriv point =
     calculate point polyX', calculate point polyY'
@@ -162,8 +162,8 @@ let viewMenu = SubMenu("View", [
 menu.Items.Add(viewMenu)
 
 let solverMenu = SubMenu("Solver", [
-                          RadioMenuItem("Solver", "Naive").WithAction(fun _ -> solver <- naivestep)
-                          RadioMenuItem("Solver", "RK4").WithCheck().WithAction(fun _ -> solver <- rk4step)
+                          RadioMenuItem("Solver", "Euler").WithAction(fun _ -> solver <- eulerStep)
+                          RadioMenuItem("Solver", "Runge-Kutta (RK4)").WithCheck().WithAction(fun _ -> solver <- rk4Step)
                         ]) |> makeMenu
 menu.Items.Add(solverMenu)
 
