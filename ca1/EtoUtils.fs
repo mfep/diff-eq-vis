@@ -37,6 +37,7 @@ let rec makeLayout (Tbl t) =
 type Menu =
     | Item of MenuItem
     | ActionMenuItem of string
+    | RadioMenuItem of string * string
     | CheckMenuItem of string
     | SubMenu of string * Menu list
     | Action of Menu * (MenuItem -> unit)
@@ -45,11 +46,21 @@ type Menu =
     member m.WithAction cb = Action(m, cb)
     member m.WithCheck() = Check(m, true)
 
+let private radioGroup = new System.Collections.Generic.Dictionary<string, RadioMenuItem>()
+
 let rec makeMenu menu =
     match menu with
     | Item m -> m
     | ActionMenuItem lbl ->
         let m = new ButtonMenuItem(Text = lbl)
+        m :> _
+    | RadioMenuItem (group, lbl) ->
+        let m = if radioGroup.ContainsKey group then
+                    new RadioMenuItem(radioGroup.[group], Text = lbl)
+                else
+                    let g = new RadioMenuItem(Text = lbl)
+                    radioGroup.[group] <- g
+                    g
         m :> _
     | CheckMenuItem lbl ->
         let m = new CheckMenuItem(Text = lbl)
@@ -67,6 +78,7 @@ let rec makeMenu menu =
         let ret = makeMenu m
         match ret with
         | :? CheckMenuItem as c -> c.Checked <- def
+        | :? RadioMenuItem as r -> r.Checked <- def
         | _ -> ()
         ret
     | Separator -> new SeparatorMenuItem() :> _

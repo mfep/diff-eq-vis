@@ -27,6 +27,7 @@ let mutable magni = defaultMagni
 let mutable globBounds = RectangleF()
 let mutable polyX' = parse defaultX'
 let mutable polyY' = parse defaultY'
+let mutable solver : stepfun = rk4step
 
 let calcDeriv point =
     calculate point polyX', calculate point polyY'
@@ -48,7 +49,7 @@ let iterSolver point =
     let iterationCount = iterSlider.Value
     let rec loop p i =
         if i > iterationCount then p
-        else loop (rk4step (step()) calcDeriv p) (i+1)
+        else loop (solver (step()) calcDeriv p) (i+1)
     loop point 1
 
 let updatePos() =
@@ -134,8 +135,8 @@ let menu = new MenuBar()
 
 let fileMenu = SubMenu("File", [
                         ActionMenuItem("Exit").WithAction(fun _ -> app.Quit())
-                      ])
-menu.Items.Add(fileMenu |> makeMenu)
+                      ]) |> makeMenu
+menu.Items.Add(fileMenu)
 
 let changeMagni mul =
     let minMagni = 50.0f
@@ -157,8 +158,14 @@ let viewMenu = SubMenu("View", [
                         Separator
                         Item antialiasCheck
                         ActionMenuItem("Set path length").WithAction(fun _ -> inputDialog "Set path length" "Set path length" (maxPathLenght.ToString()) changeMaxPathCallback)
-                      ])
-menu.Items.Add(viewMenu |> makeMenu)
+                      ]) |> makeMenu
+menu.Items.Add(viewMenu)
+
+let solverMenu = SubMenu("Solver", [
+                          RadioMenuItem("Solver", "Naive").WithAction(fun _ -> solver <- naivestep)
+                          RadioMenuItem("Solver", "RK4").WithCheck().WithAction(fun _ -> solver <- rk4step)
+                        ]) |> makeMenu
+menu.Items.Add(solverMenu)
 
 let layout =
     Tbl [
